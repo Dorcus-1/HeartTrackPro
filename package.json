@@ -1,0 +1,19 @@
+{
+  "name": "hearttrackpro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "HeartTracker"
+  },
+  "author": "Dorcus",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
