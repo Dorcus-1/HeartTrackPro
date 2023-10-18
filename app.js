@@ -1,38 +1,43 @@
-// server.js
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
-const db = require('./db');
+const ejs = require('ejs');
+const path = require('path');
+const db = require('./db.js'); // Import the database module
+
+const app = express();
 
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint to add a new patient
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Handle POST request to add a patient
 app.post('/patients', (req, res) => {
-  const { name, temperature, heartbeat } = req.body;
+  const { name, bodyTemp, heartRate, patients_NID, frequent_sickness } = req.body;
 
-  if (!name || !temperature || !heartbeat) {
-    return res.status(400).json({ message: 'All fields are required' });
+  if (!name || !bodyTemp || !heartRate || !patients_NID || !frequent_sickness) {
+    return res.status(400).json({ error: 'All fields are required.' });
   }
 
-  const insertPatient = db.prepare('INSERT INTO patients (name, temperature, heartbeat) VALUES (?, ?, ?)');
-  insertPatient.run(name, temperature, heartbeat, (err) => {
+db.addPatient(name, bodyTemp, heartRate, patients_NID, frequent_sickness, (err) => {
     if (err) {
-      return res.status(500).json({ message: 'Error saving patient data' });
+      console.error(err.message);
+      return res.status(500).json({ error: 'Database error.' });
     }
-    return res.status(201).json({ message: 'Patient data saved successfully' });
+    res.status(201).json({ message: 'Patient information received successfully.' });
   });
-  insertPatient.finalize();
 });
 
-app.get('/patients', (req, res) => {
-    const selectPatients = 'SELECT * FROM patients';
-    db.all(selectPatients, (err, rows) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error fetching patient data' });
-      }
-      res.status(200).json(rows);
-    });
+// Render a page displaying patient data with Chart.js
+app.get('/chart', (req, res) => {
+  db.getAllPatients((err, rows) => {
+    if (err) {
+      return console.error(err.message);
+    }
+    res.render('chart', { patients: rows });
   });
+});
 
 // Start the server
 const port = process.env.PORT || 3000;
